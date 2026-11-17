@@ -1,0 +1,866 @@
+```html
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartJob – AI Career Assistant</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            DEFAULT: '#193B68',
+                            dark: '#102747',
+                            light: '#24528f'
+                        },
+                        lightblue: {
+                            DEFAULT: '#EAF2FB',
+                            dark: '#d2e4f7'
+                        },
+                        charcoal: '#202938',
+                        muted: '#667085',
+                        success: '#10B981',
+                        offwhite: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for UI icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; background-color: #F8FAFC; color: #202938; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #F8FAFC; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-7px); }
+        }
+        @keyframes floatDelayed {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-9px); }
+        }
+        @keyframes scanLine {
+            0% { top: 6%; opacity: 0.25; }
+            50% { top: 90%; opacity: 1; }
+            100% { top: 6%; opacity: 0.25; }
+        }
+        .animate-float-slow { animation: floatSlow 4.8s ease-in-out infinite; }
+        .animate-float-delayed { animation: floatDelayed 5.6s ease-in-out 1.4s infinite; }
+        .scan-beam { animation: scanLine 2.3s ease-in-out infinite; }
+    </style>
+</head>
+<body class="bg-offwhite text-charcoal antialiased selection:bg-lightblue selection:text-navy">
+
+    <!-- ==================== 1. CONSISTENT NAVBAR ==================== -->
+    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <a href="#home" class="flex items-center gap-3 group">
+                <div class="w-11 h-11 rounded-xl bg-navy flex items-center justify-center text-white shadow-md shadow-navy/20 group-hover:scale-105 transition-transform">
+                    <svg class="w-6 h-6 text-lightblue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <div>
+                    <span class="text-xl font-extrabold text-navy tracking-tight">Smart<span class="text-sky-600">Job</span></span>
+                    <span class="block text-[10px] font-semibold uppercase tracking-wider text-muted">AI Career Assistant</span>
+                </div>
+            </a>
+
+            <!-- Desktop Navigation Links (Exact Requested Order) -->
+            <nav class="hidden lg:flex items-center gap-7 font-semibold text-sm text-charcoal">
+                <a href="#home" class="text-navy hover:text-sky-600 transition-colors">Home</a>
+                <a href="#ai-cv-checker" class="hover:text-navy transition-colors">AI CV Checker</a>
+                <a href="#find-jobs" class="hover:text-navy transition-colors">Find Jobs</a>
+                <a href="#ai-tools" class="hover:text-navy transition-colors">Career Tools</a>
+                <a href="#career-development" class="hover:text-navy transition-colors">Career Dev</a>
+                <a id="navEmployerBadgeLink" href="#employer-dashboard" class="hidden text-sky-800 bg-lightblue px-3 py-1.5 rounded-xl font-bold text-xs hover:bg-lightblue-dark transition-colors">
+                    <i class="fa-solid fa-building-user mr-1"></i> Employer Hub
+                </a>
+            </nav>
+
+            <!-- Guest Auth Buttons (When Logged Out) -->
+            <div id="guestNavActions" class="hidden sm:flex items-center gap-3">
+                <button onclick="openAuthModal('login')" class="px-4 py-2.5 rounded-xl text-sm font-bold text-navy hover:bg-lightblue/70 transition-all">Masuk</button>
+                <button onclick="openAuthModal('register')" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-navy text-white hover:bg-navy-dark shadow-md shadow-navy/20 transition-all">Daftar Gratis</button>
+            </div>
+
+            <!-- Logged-In User Profile Dropdown (When Logged In) -->
+            <div id="userNavProfile" class="hidden relative">
+                <button onclick="toggleProfileDropdown()" class="flex items-center gap-3 bg-offwhite hover:bg-lightblue/60 border border-slate-200 px-3.5 py-2 rounded-2xl transition-all">
+                    <div id="navUserAvatar" class="w-9 h-9 rounded-xl bg-navy text-white font-bold text-sm flex items-center justify-center shadow-sm">NP</div>
+                    <div class="text-left hidden md:block">
+                        <p id="navUserName" class="text-xs font-extrabold text-navy leading-tight">Nadira Putri</p>
+                        <span id="navUserRoleBadge" class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Pelamar</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-xs text-muted"></i>
+                </button>
+
+                <!-- Profile Dropdown Menu -->
+                <div id="profileDropdownMenu" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50">
+                    <div class="px-4 py-2.5 border-b border-slate-100">
+                        <p id="dropdownUserEmail" class="text-xs text-muted truncate">nadira@email.com</p>
+                        <p id="dropdownUserSub" class="text-[11px] font-semibold text-navy mt-0.5">Sistem Informasi • Fresh Graduate</p>
+                    </div>
+                    <button onclick="openProfileModal(); toggleProfileDropdown();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-charcoal hover:bg-offwhite flex items-center gap-2.5">
+                        <i class="fa-solid fa-user-pen text-navy w-4"></i> Profil User & Pengaturan
+                    </button>
+                    <button onclick="goToRoleDashboard(); toggleProfileDropdown();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-charcoal hover:bg-offwhite flex items-center gap-2.5">
+                        <i class="fa-solid fa-gauge-high text-sky-600 w-4"></i> Dashboard Peran Saya
+                    </button>
+                    <div class="border-t border-slate-100 mt-1 pt-1">
+                        <button onclick="handleLogout()" class="w-full text-left px-4 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5">
+                            <i class="fa-solid fa-right-from-bracket w-4"></i> Log Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Hamburger -->
+            <button onclick="toggleMobileMenu()" class="lg:hidden text-charcoal p-2 rounded-lg hover:bg-slate-100" aria-label="Toggle Menu">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Drawer -->
+        <div id="mobileMenu" class="hidden lg:hidden bg-white border-b border-slate-200 px-6 py-4 space-y-2.5">
+            <a href="#home" class="block py-2 font-semibold text-navy" onclick="toggleMobileMenu()">Home</a>
+            <a href="#ai-cv-checker" class="block py-2 font-semibold" onclick="toggleMobileMenu()">AI CV Checker</a>
+            <a href="#find-jobs" class="block py-2 font-semibold" onclick="toggleMobileMenu()">Find Jobs</a>
+            <a href="#ai-tools" class="block py-2 font-semibold" onclick="toggleMobileMenu()">Career Tools</a>
+            <a href="#career-development" class="block py-2 font-semibold" onclick="toggleMobileMenu()">Career Dev</a>
+            <a id="mobileEmployerLink" href="#employer-dashboard" class="hidden block py-2 font-semibold text-sky-700" onclick="toggleMobileMenu()">Employer Hub</a>
+            <div id="mobileAuthButtons" class="pt-3 border-t border-slate-100 flex gap-3">
+                <button onclick="openAuthModal('login'); toggleMobileMenu();" class="w-1/2 py-2.5 rounded-xl text-xs font-bold border border-navy text-navy">Masuk</button>
+                <button onclick="openAuthModal('register'); toggleMobileMenu();" class="w-1/2 py-2.5 rounded-xl text-xs font-bold bg-navy text-white">Daftar Gratis</button>
+            </div>
+            <div id="mobileUserActions" class="hidden pt-3 border-t border-slate-100 flex gap-2">
+                <button onclick="openProfileModal(); toggleMobileMenu();" class="flex-1 py-2 rounded-xl text-xs font-bold bg-lightblue text-navy">Profil User</button>
+                <button onclick="handleLogout(); toggleMobileMenu();" class="flex-1 py-2 rounded-xl text-xs font-bold bg-rose-50 text-rose-600">Log Out</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== 2. HOME / HERO SECTION ==================== -->
+    <section id="home" class="relative overflow-hidden pt-10 pb-16 lg:pt-14 lg:pb-20 bg-gradient-to-b from-lightblue/70 via-white to-offwhite">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+                
+                <!-- Left Column: Headline, Tagline, Description & CTAs -->
+                <div class="lg:col-span-6 space-y-5">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-lightblue border border-sky-200 text-navy text-xs font-bold tracking-wide">
+                        <span class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
+                        AI-Powered Career Ecosystem Indonesia
+                    </div>
+
+                    <h1 class="text-4xl sm:text-5xl lg:text-[52px] font-extrabold text-navy leading-[1.13] tracking-tight">
+                        Temukan Karier yang Tepat untuk Potensimu.
+                    </h1>
+
+                    <p class="text-base sm:text-lg font-bold text-sky-800">
+                        "Your Skills, Your Potential, Your Next Career."
+                    </p>
+
+                    <p class="text-sm sm:text-base text-muted leading-relaxed">
+                        SmartJob menghadirkan asisten karier berbasis Artificial Intelligence yang mengevaluasi kualitas CV ATS Anda, mencocokkan kompetensi secara presisi dengan perusahaan terkemuka di Indonesia, serta menyiapkan kesiapan kerja Anda dalam satu platform terpadu.
+                    </p>
+
+                    <!-- Primary CTAs -->
+                    <div class="flex flex-col sm:flex-row gap-3.5 pt-2">
+                        <a href="#find-jobs" class="px-7 py-3.5 rounded-xl bg-navy text-white font-bold text-sm text-center hover:bg-navy-dark shadow-lg shadow-navy/25 transition-all flex items-center justify-center gap-2 group">
+                            <i class="fa-solid fa-briefcase text-sky-300"></i>
+                            <span>Temukan Pekerjaan</span>
+                            <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                        </a>
+                        <a href="#ai-cv-checker" class="px-7 py-3.5 rounded-xl bg-white text-navy font-bold text-sm text-center border-2 border-navy/20 hover:border-navy hover:bg-lightblue/40 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles text-sky-600"></i>
+                            <span>Mulai dengan AI</span>
+                        </a>
+                    </div>
+
+                    <!-- Quick Value Highlights -->
+                    <div class="pt-4 border-t border-slate-200/80 flex flex-wrap items-center gap-4 text-xs text-muted">
+                        <span class="font-bold text-navy"><i class="fa-solid fa-circle-check text-success mr-1"></i> AI CV ATS Scoring</span>
+                        <span class="font-bold text-navy"><i class="fa-solid fa-circle-check text-success mr-1"></i> 15.000+ Lowongan Aktif</span>
+                        <button onclick="openAuthModal('login')" class="text-sky-700 font-bold hover:underline">
+                            <i class="fa-solid fa-right-to-bracket mr-1"></i> Masuk Pelamar / Perusahaan &rarr;
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Column: Flat Editorial SVG Illustration (Young Indonesian Woman, Navy Blazer, Ivory Blouse, Shoulder-Length Hair, Pearl & Gold Accents, Silver Laptop, Minimalist Desk, Modern Corporate Buildings) + Floating UI Cards -->
+                <div class="lg:col-span-6 relative flex justify-center">
+                    <div class="relative w-full max-w-xl">
+                        <div class="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-gradient-to-b from-[#E3EFFC] via-[#F2F7FD] to-[#DCE8F6]">
+                            <svg viewBox="0 0 640 480" class="w-full h-auto block" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ilustrasi Profesional Muda Indonesia dengan Blazer Navy, Blus Ivory, Laptop Perak, Meja Minimalis dan Gedung Perusahaan">
+                                <defs>
+                                    <linearGradient id="skyBackdrop" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#DCEBFA"/>
+                                        <stop offset="100%" stop-color="#F6FAFE"/>
+                                    </linearGradient>
+                                    <linearGradient id="navyBlazerGrad" x1="0" y1="0" x2="1" y2="1">
+                                        <stop offset="0%" stop-color="#1E4477"/>
+                                        <stop offset="100%" stop-color="#132D52"/>
+                                    </linearGradient>
+                                    <linearGradient id="silverLaptopGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#F8FAFC"/>
+                                        <stop offset="100%" stop-color="#CBD5E1"/>
+                                    </linearGradient>
+                                    <linearGradient id="warmSkin" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#F9D7C0"/>
+                                        <stop offset="100%" stop-color="#ECC1A5"/>
+                                    </linearGradient>
+                                    <linearGradient id="goldShine" x1="0" y1="0" x2="1" y2="1">
+                                        <stop offset="0%" stop-color="#FCD34D"/>
+                                        <stop offset="100%" stop-color="#D97706"/>
+                                    </linearGradient>
+                                </defs>
+
+                                <!-- Soft Sky & Sun Glow -->
+                                <rect width="640" height="480" fill="url(#skyBackdrop)"/>
+                                <circle cx="490" cy="105" r="95" fill="#FFFFFF" opacity="0.6"/>
+
+                                <!-- Modern Corporate Buildings Background -->
+                                <g opacity="0.9">
+                                    <!-- Left Corporate Tower -->
+                                    <rect x="38" y="108" width="94" height="272" rx="6" fill="#C4D8EE"/>
+                                    <rect x="52" y="128" width="14" height="18" rx="2" fill="#EBF4FC"/>
+                                    <rect x="76" y="128" width="14" height="18" rx="2" fill="#EBF4FC"/>
+                                    <rect x="100" y="128" width="14" height="18" rx="2" fill="#EBF4FC"/>
+                                    <rect x="52" y="158" width="14" height="18" rx="2" fill="#EBF4FC"/>
+                                    <rect x="76" y="158" width="14" height="18" rx="2" fill="#EBF4FC"/>
+                                    <rect x="100" y="158" width="14" height="18" rx="2" fill="#EBF4FC"/>
+                                    <rect x="52" y="188" width="14" height="18" rx="2" fill="#EBF4FC"/>
+                                    <rect x="76" y="188" width="14" height="18" rx="2" fill="#EBF4FC"/>
+                                    <rect x="100" y="188" width="14" height="18" rx="2" fill="#EBF4FC"/>
+
+                                    <!-- Center Tall Glass Skyscraper -->
+                                    <rect x="148" y="58" width="130" height="322" rx="8" fill="#B2CBE6"/>
+                                    <line x1="174" y1="74" x2="174" y2="352" stroke="#DCEBFA" stroke-width="3"/>
+                                    <line x1="200" y1="74" x2="200" y2="352" stroke="#DCEBFA" stroke-width="3"/>
+                                    <line x1="226" y1="74" x2="226" y2="352" stroke="#DCEBFA" stroke-width="3"/>
+                                    <line x1="252" y1="74" x2="252" y2="352" stroke="#DCEBFA" stroke-width="3"/>
+                                    <line x1="158" y1="112" x2="268" y2="112" stroke="#DCEBFA" stroke-width="2"/>
+                                    <line x1="158" y1="152" x2="268" y2="152" stroke="#DCEBFA" stroke-width="2"/>
+                                    <line x1="158" y1="192" x2="268" y2="192" stroke="#DCEBFA" stroke-width="2"/>
+
+                                    <!-- Right Corporate Building -->
+                                    <rect x="444" y="84" width="148" height="296" rx="8" fill="#B9D1EA"/>
+                                    <rect x="464" y="108" width="22" height="24" rx="3" fill="#EBF4FC"/>
+                                    <rect x="500" y="108" width="22" height="24" rx="3" fill="#EBF4FC"/>
+                                    <rect x="536" y="108" width="22" height="24" rx="3" fill="#EBF4FC"/>
+                                    <rect x="464" y="146" width="22" height="24" rx="3" fill="#EBF4FC"/>
+                                    <rect x="500" y="146" width="22" height="24" rx="3" fill="#EBF4FC"/>
+                                    <rect x="536" y="146" width="22" height="24" rx="3" fill="#EBF4FC"/>
+                                    <rect x="464" y="184" width="22" height="24" rx="3" fill="#EBF4FC"/>
+                                    <rect x="500" y="184" width="22" height="24" rx="3" fill="#EBF4FC"/>
+                                    <rect x="536" y="184" width="22" height="24" rx="3" fill="#EBF4FC"/>
+                                </g>
+
+                                <!-- Minimalist Desk Plant & Books -->
+                                <g>
+                                    <!-- Stacked Career Books on Left of Desk -->
+                                    <rect x="108" y="347" width="66" height="13" rx="3" fill="#193B68"/>
+                                    <rect x="114" y="335" width="58" height="12" rx="3" fill="#0284C7"/>
+                                    <rect x="120" y="324" width="50" height="11" rx="3" fill="#FFFDF7" stroke="#CBD5E1" stroke-width="1"/>
+
+                                    <!-- Potted Plant on Right of Desk -->
+                                    <rect x="512" y="316" width="38" height="44" rx="6" fill="#193B68"/>
+                                    <path d="M531 316 C519 292, 501 295, 505 312 C509 320, 525 318, 531 316 Z" fill="#10B981"/>
+                                    <path d="M531 316 C543 286, 563 290, 557 310 C553 320, 537 318, 531 316 Z" fill="#059669"/>
+                                    <path d="M531 316 C527 280, 535 274, 539 295 C541 306, 535 314, 531 316 Z" fill="#34D399"/>
+                                </g>
+
+                                <!-- Young Indonesian Female Professional -->
+                                <g>
+                                    <!-- Neat Shoulder-Length Hair (Back Layer) -->
+                                    <path d="M265 154 C261 108, 379 108, 375 154 C383 205, 386 248, 372 266 C358 272, 282 272, 268 266 C254 248, 257 205, 265 154 Z" fill="#1D2330"/>
+
+                                    <!-- Neck & Collarbone -->
+                                    <rect x="306" y="198" width="28" height="36" rx="10" fill="url(#warmSkin)"/>
+                                    <path d="M306 212 Q320 220 334 212 L334 202 L306 202 Z" fill="#DDA98A" opacity="0.45"/>
+
+                                    <!-- Ivory Silk Blouse (#FFFDF7) -->
+                                    <path d="M268 234 L372 234 L388 355 L252 355 Z" fill="#FFFDF7"/>
+                                    <path d="M302 235 Q320 264 338 235" fill="none" stroke="#EAE2D0" stroke-width="2.5"/>
+                                    <path d="M296 248 Q320 278 344 248" fill="none" stroke="#EAE2D0" stroke-width="2"/>
+
+                                    <!-- Delicate Gold Necklace with Luminous Pearl Pendant -->
+                                    <path d="M304 226 Q320 245 336 226" fill="none" stroke="url(#goldShine)" stroke-width="1.8"/>
+                                    <circle cx="320" cy="237" r="3.8" fill="#FFFFFF" stroke="#D97706" stroke-width="0.9"/>
+
+                                    <!-- Tailored Navy Blue Blazer (#193B68) -->
+                                    <path d="M250 235 C235 242, 224 275, 218 355 L298 355 L294 234 Z" fill="url(#navyBlazerGrad)"/>
+                                    <path d="M390 235 C405 242, 416 275, 422 355 L342 355 L346 234 Z" fill="url(#navyBlazerGrad)"/>
+                                    <!-- Tailored Lapels -->
+                                    <polygon points="294,234 312,285 282,292 276,244" fill="#234D84"/>
+                                    <polygon points="346,234 328,285 358,292 364,244" fill="#234D84"/>
+                                    <!-- Gold Blazer Buttons -->
+                                    <circle cx="294" cy="306" r="3.2" fill="url(#goldShine)"/>
+                                    <circle cx="346" cy="306" r="3.2" fill="url(#goldShine)"/>
+
+                                    <!-- Graceful Face -->
+                                    <path d="M284 152 C284 122, 356 122, 356 152 C356 186, 338 206, 320 206 C302 206, 284 186, 284 152 Z" fill="url(#warmSkin)"/>
+                                    <!-- Soft Cheek Blush -->
+                                    <ellipse cx="298" cy="175" rx="7" ry="4" fill="#F4978E" opacity="0.35"/>
+                                    <ellipse cx="342" cy="175" rx="7" ry="4" fill="#F4978E" opacity="0.35"/>
+                                    <!-- Neat Eyebrows -->
+                                    <path d="M294 154 Q303 150 311 153" fill="none" stroke="#232834" stroke-width="2.2" stroke-linecap="round"/>
+                                    <path d="M329 153 Q337 150 346 154" fill="none" stroke="#232834" stroke-width="2.2" stroke-linecap="round"/>
+                                    <!-- Expressive Warm Eyes -->
+                                    <circle cx="303" cy="163" r="3.4" fill="#1E2430"/>
+                                    <circle cx="304.2" cy="161.8" r="1.1" fill="#FFFFFF"/>
+                                    <circle cx="337" cy="163" r="3.4" fill="#1E2430"/>
+                                    <circle cx="338.2" cy="161.8" r="1.1" fill="#FFFFFF"/>
+                                    <!-- Nose & Confident Smile -->
+                                    <path d="M320 165 L318 175 L322 176" fill="none" stroke="#D49B7A" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M311 185 Q320 192 329 185" fill="none" stroke="#C86D6D" stroke-width="2.3" stroke-linecap="round"/>
+
+                                    <!-- Front Shoulder-Length Hair Framing Face -->
+                                    <path d="M282 152 C282 116, 358 116, 358 152 C356 136, 338 130, 322 134 C304 130, 286 138, 282 152 Z" fill="#181D27"/>
+                                    <path d="M283 146 C276 175, 274 218, 282 252 C287 232, 287 188, 285 158 Z" fill="#1E2430"/>
+                                    <path d="M357 146 C364 175, 366 218, 358 252 C353 232, 353 188, 355 158 Z" fill="#1E2430"/>
+
+                                    <!-- Pearl & Gold Stud Earrings -->
+                                    <circle cx="281" cy="176" r="4.3" fill="#FFFFFF" stroke="#D97706" stroke-width="1"/>
+                                    <circle cx="359" cy="176" r="4.3" fill="#FFFFFF" stroke="#D97706" stroke-width="1"/>
+
+                                    <!-- Sleeves, Gold Watch Accent & Hands -->
+                                    <path d="M226 285 Q242 328 278 336 L284 322 Q256 312 246 280 Z" fill="#193B68"/>
+                                    <path d="M414 285 Q398 328 362 336 L356 322 Q384 312 394 280 Z" fill="#193B68"/>
+                                    <rect x="268" y="324" width="6" height="11" rx="2" fill="url(#goldShine)"/>
+                                    <ellipse cx="282" cy="332" rx="9" ry="6" fill="url(#warmSkin)"/>
+                                    <ellipse cx="358" cy="332" rx="9" ry="6" fill="url(#warmSkin)"/>
+                                </g>
+
+                                <!-- Sleek Silver Laptop -->
+                                <g>
+                                    <rect x="248" y="264" width="144" height="92" rx="8" fill="url(#silverLaptopGrad)" stroke="#94A3B8" stroke-width="2"/>
+                                    <circle cx="320" cy="310" r="9" fill="#FFFFFF" opacity="0.9"/>
+                                    <path d="M316 310 L319 313 L325 307" fill="none" stroke="#193B68" stroke-width="2" stroke-linecap="round"/>
+                                    <rect x="234" y="354" width="172" height="7" rx="3.5" fill="#94A3B8"/>
+                                </g>
+
+                                <!-- Minimalist Desk -->
+                                <g>
+                                    <rect x="70" y="361" width="500" height="14" rx="7" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+                                    <rect x="115" y="375" width="12" height="105" fill="#CBD5E1"/>
+                                    <rect x="513" y="375" width="12" height="105" fill="#CBD5E1"/>
+                                </g>
+                            </svg>
+                        </div>
+
+                        <!-- Floating UI 1: AI CV Score -->
+                        <div class="absolute -top-4 -left-2 sm:-left-6 bg-white rounded-2xl p-3.5 shadow-xl border border-slate-100 animate-float-slow flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg">
+                                <i class="fa-solid fa-file-circle-check"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-muted font-bold uppercase">AI CV Score</p>
+                                <p class="text-sm font-extrabold text-navy">94 / 100 <span class="text-emerald-600 text-xs">ATS Ready</span></p>
+                            </div>
+                        </div>
+
+                        <!-- Floating UI 2: Job Match 92% -->
+                        <div class="absolute top-1/4 -right-2 sm:-right-6 bg-white rounded-2xl p-3.5 shadow-xl border border-slate-100 animate-float-delayed flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold text-lg">
+                                <i class="fa-solid fa-bullseye"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-muted font-bold uppercase">Job Match</p>
+                                <p class="text-sm font-extrabold text-navy">92% Cocok</p>
+                            </div>
+                        </div>
+
+                        <!-- Floating UI 3: Resume Analysis & Career Recommendation -->
+                        <div class="hidden sm:flex absolute bottom-20 -left-7 bg-white rounded-2xl p-3 shadow-xl border border-slate-100 animate-float-delayed items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-muted font-bold">Career Recommendation</p>
+                                <p class="text-xs font-bold text-charcoal">Data & Product Analyst</p>
+                            </div>
+                        </div>
+
+                        <!-- Floating UI 4: Skill Progress & New Job Notification -->
+                        <div class="absolute -bottom-5 right-3 sm:right-6 bg-white rounded-2xl p-3.5 shadow-xl border border-slate-100 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-base">
+                                <i class="fa-solid fa-bell"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-emerald-600 font-bold uppercase">Notifikasi Lowongan Baru</p>
+                                <p class="text-xs font-extrabold text-navy">Skill Progress 88% • 6 Peluang</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 3. AI CV CHECKER (IMMEDIATELY AFTER HERO SECTION, BEFORE FIND JOBS) ==================== -->
+    <section id="ai-cv-checker" class="py-20 bg-white border-t border-slate-200/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-700 bg-lightblue px-3.5 py-1.5 rounded-full">Langkah 1 • Evaluasi Kesiapan CV</span>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-navy mt-3 tracking-tight">AI CV Checker & ATS Scanner</h2>
+                    <p class="text-muted mt-2 max-w-2xl">Lampirkan file CV Anda (.PDF, .DOC, .DOCX, .TXT) untuk dipindai otomatis oleh kecerdasan buatan. Dapatkan skor ATS, kekuatan kata kunci, dan saran perbaikan instan.</p>
+                </div>
+                <div class="mt-4 md:mt-0 flex flex-wrap gap-2">
+                    <button onclick="runCvPreset('data')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-lightblue text-navy hover:bg-navy hover:text-white transition-all">Gunakan Contoh CV Data</button>
+                    <button onclick="runCvPreset('hr')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-lightblue text-navy hover:bg-navy hover:text-white transition-all">Gunakan Contoh CV HR</button>
+                    <button onclick="runCvPreset('uiux')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-lightblue text-navy hover:bg-navy hover:text-white transition-all">Gunakan Contoh CV UI/UX</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                <!-- Left: Interactive Digital CV Document + Real File Upload Dropzone -->
+                <div class="lg:col-span-5 bg-offwhite rounded-3xl p-6 sm:p-8 border border-slate-200/90 flex flex-col justify-between relative overflow-hidden">
+                    <!-- Digital CV Card with Live AI Scanning Beam -->
+                    <div class="relative bg-white rounded-2xl p-5 shadow-md border border-slate-200 overflow-hidden">
+                        <div id="cvScanBeam" class="scan-beam absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-sky-500 to-transparent shadow-[0_0_12px_#0ea5e9] pointer-events-none"></div>
+
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3.5 mb-3.5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-11 h-11 rounded-xl bg-navy text-white font-extrabold flex items-center justify-center text-sm" id="cvDocInitials">NP</div>
+                                <div>
+                                    <h4 id="cvDocName" class="font-bold text-navy text-sm">Nadira Putri, S.Kom</h4>
+                                    <p id="cvDocRole" class="text-xs text-muted">Data & Business Intelligence Analyst</p>
+                                </div>
+                            </div>
+                            <span id="cvFileStatusBadge" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">ATS Ready</span>
+                        </div>
+
+                        <div class="space-y-3 text-xs text-charcoal">
+                            <div>
+                                <p class="font-bold text-navy uppercase text-[10px] tracking-wider mb-1">Ringkasan Hasil Ekstraksi AI</p>
+                                <p id="cvDocSummary" class="text-muted leading-relaxed">Lulusan Sistem Informasi dengan pengalaman menganalisis big data, SQL, Python, dan visualisasi dashboard untuk meningkatkan efisiensi operasional hingga 24%.</p>
+                            </div>
+                            <div>
+                                <p class="font-bold text-navy uppercase text-[10px] tracking-wider mb-1">Kata Kunci Kompetensi Terdeteksi</p>
+                                <div id="cvDocSkills" class="flex flex-wrap gap-1.5">
+                                    <span class="px-2 py-0.5 rounded bg-lightblue text-navy font-semibold">Python</span>
+                                    <span class="px-2 py-0.5 rounded bg-lightblue text-navy font-semibold">SQL</span>
+                                    <span class="px-2 py-0.5 rounded bg-lightblue text-navy font-semibold">Tableau</span>
+                                    <span class="px-2 py-0.5 rounded bg-lightblue text-navy font-semibold">Data Modeling</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Real CV File Attachment Dropzone -->
+                    <div class="mt-5 space-y-3">
+                        <label class="block text-xs font-extrabold text-navy">Lampirkan File CV Anda (.PDF, .DOC, .DOCX, .TXT):</label>
+                        <div id="cvDropZone" onclick="document.getElementById('cvFileInput').click()" ondragover="handleCvDragOver(event)" ondragleave="handleCvDragLeave(event)" ondrop="handleCvDrop(event)" class="border-2 border-dashed border-sky-300 hover:border-navy bg-white rounded-2xl p-5 text-center cursor-pointer transition-all group">
+                            <input type="file" id="cvFileInput" accept=".pdf,.doc,.docx,.txt" class="hidden" onchange="handleCvFileUpload(event)">
+                            <div class="w-11 h-11 rounded-2xl bg-lightblue text-navy mx-auto flex items-center justify-center text-lg mb-2 group-hover:scale-105 transition-transform">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <p id="cvFileLabel" class="text-xs font-extrabold text-navy">Klik untuk pilih file CV atau seret (drag & drop) ke sini</p>
+                            <p id="cvFileMeta" class="text-[11px] text-muted mt-1">Format didukung: PDF, DOC, DOCX, TXT (Maks. 5MB)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: AI CV Score Dashboard & Actionable Recommendations -->
+                <div class="lg:col-span-7 bg-offwhite rounded-3xl p-6 sm:p-8 border border-slate-200/90 flex flex-col justify-between">
+                    <div>
+                        <div class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-slate-200">
+                            <div>
+                                <span class="text-xs font-bold text-muted uppercase">Hasil Evaluasi Otomatis AI</span>
+                                <h3 class="text-xl font-extrabold text-navy mt-1">Skor Kesiapan & Kompatibilitas ATS</h3>
+                            </div>
+                            <div class="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-sm border border-slate-200">
+                                <div class="text-right">
+                                    <p class="text-[10px] font-bold text-muted uppercase">Skor Total CV</p>
+                                    <p id="cvTotalScore" class="text-2xl font-extrabold text-emerald-600">94<span class="text-sm text-muted font-semibold">/100</span></p>
+                                </div>
+                                <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                                    <i class="fa-solid fa-award"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Metrics -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6">
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200/80">
+                                <div class="flex justify-between text-xs font-bold mb-1.5">
+                                    <span class="text-muted">ATS Format</span>
+                                    <span id="cvAtsMetric" class="text-navy">96%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                    <div id="cvAtsBar" class="bg-emerald-500 h-full w-[96%] rounded-full transition-all duration-500"></div>
+                                </div>
+                            </div>
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200/80">
+                                <div class="flex justify-between text-xs font-bold mb-1.5">
+                                    <span class="text-muted">Kekuatan Keyword</span>
+                                    <span id="cvKeywordMetric" class="text-navy">92%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                    <div id="cvKeywordBar" class="bg-sky-600 h-full w-[92%] rounded-full transition-all duration-500"></div>
+                                </div>
+                            </div>
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200/80">
+                                <div class="flex justify-between text-xs font-bold mb-1.5">
+                                    <span class="text-muted">Dampak Terukur</span>
+                                    <span id="cvImpactMetric" class="text-navy">93%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                    <div id="cvImpactBar" class="bg-indigo-600 h-full w-[93%] rounded-full transition-all duration-500"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Improvement Recommendations -->
+                        <div class="space-y-2.5">
+                            <p class="text-xs font-extrabold text-navy uppercase tracking-wider">Rekomendasi Perbaikan & Kecocokan Posisi:</p>
+                            <div id="cvRecommendationsList" class="space-y-2">
+                                <div class="bg-white p-3.5 rounded-xl border border-slate-200/80 flex items-start gap-3 text-xs">
+                                    <i class="fa-solid fa-circle-check text-success mt-0.5"></i>
+                                    <span><strong>Struktur ATS Optimal:</strong> Seluruh bagian pengalaman kerja, pendidikan, dan sertifikasi terbaca bersih oleh sistem rekrutmen.</span>
+                                </div>
+                                <div class="bg-white p-3.5 rounded-xl border border-slate-200/80 flex items-start gap-3 text-xs">
+                                    <i class="fa-solid fa-lightbulb text-amber-500 mt-0.5"></i>
+                                    <span><strong>Rekomendasi Posisi AI:</strong> Data & Business Intelligence Analyst, Product Analyst, serta Operations Strategy.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-xs text-muted">Hasil pemindaian CV terhubung langsung ke rekomendasi lowongan di bawah</span>
+                        <a href="#find-jobs" class="text-xs font-extrabold text-navy hover:text-sky-600 flex items-center gap-1">
+                            Lanjut ke Find Jobs <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 4. FIND JOBS SECTION (RIGHT AFTER AI CV CHECKER, SINGLE SEARCH/LOCATION BAR, OFFICIAL LOGOS & LINKS) ==================== -->
+    <section id="find-jobs" class="py-20 bg-offwhite border-t border-slate-200/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col lg:flex-row lg:items-end justify-between mb-8 gap-4">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-700 bg-lightblue px-3.5 py-1.5 rounded-full">Langkah 2 • Pencarian Kerja Terkurasi</span>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-navy mt-3 tracking-tight">Find Jobs & AI Job Portal</h2>
+                    <p class="text-muted mt-2 max-w-2xl">Jelajahi lowongan dari perusahaan terkemuka di Indonesia dengan indikator AI Match, rentang gaji IDR transparan, serta tautan resmi situs karier perusahaan.</p>
+                </div>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="inline-flex items-center gap-1.5 font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                        <i class="fa-solid fa-circle-check"></i> Lowongan Terverifikasi
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 font-semibold text-amber-700 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
+                        <i class="fa-solid fa-flask"></i> Data Simulasi
+                    </span>
+                </div>
+            </div>
+
+            <!-- SINGLE UNIFIED SEARCH & FILTER BAR (ONLY 1 KEYWORD & 1 LOCATION INPUT IN THE ENTIRE APP) -->
+            <div class="bg-white rounded-3xl shadow-lg p-5 sm:p-6 border border-slate-200/90 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                    <!-- Input 1: Posisi / Keterampilan -->
+                    <div class="md:col-span-4">
+                        <label for="unifiedKeyword" class="block text-xs font-bold uppercase tracking-wider text-navy mb-1.5 ml-1">
+                            Posisi atau Keterampilan
+                        </label>
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-muted"></i>
+                            <input type="text" id="unifiedKeyword" oninput="renderJobs()" placeholder="cth. Data Analyst, HR, React, UI/UX..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-offwhite border border-slate-200 focus:outline-none focus:ring-2 focus:ring-navy/20 focus:border-navy text-xs sm:text-sm font-medium">
+                        </div>
+                    </div>
+
+                    <!-- Input 2: Lokasi Lengkap Seluruh Indonesia (Alphabetical A-Z) -->
+                    <div class="md:col-span-3">
+                        <label for="unifiedLocation" class="block text-xs font-bold uppercase tracking-wider text-navy mb-1.5 ml-1">
+                            Lokasi (Indonesia A–Z)
+                        </label>
+                        <div class="relative">
+                            <i class="fa-solid fa-location-dot absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-600"></i>
+                            <select id="unifiedLocation" onchange="renderJobs()" class="w-full pl-10 pr-8 py-3 rounded-xl bg-offwhite border border-slate-200 focus:outline-none focus:ring-2 focus:ring-navy/20 focus:border-navy text-xs sm:text-sm font-medium appearance-none cursor-pointer">
+                                <option value="">Semua Wilayah Indonesia (A–Z)</option>
+                                <option value="Aceh Barat">Aceh Barat, Aceh</option>
+                                <option value="Ambon">Ambon, Maluku</option>
+                                <option value="Balikpapan">Balikpapan, Kalimantan Timur</option>
+                                <option value="Banda Aceh">Banda Aceh, Aceh</option>
+                                <option value="Bandar Lampung">Bandar Lampung, Lampung</option>
+                                <option value="Bandung">Bandung, Jawa Barat</option>
+                                <option value="Banjarmasin">Banjarmasin, Kalimantan Selatan</option>
+                                <option value="Batam">Batam, Kepulauan Riau</option>
+                                <option value="Bekasi">Bekasi, Jawa Barat</option>
+                                <option value="Bengkulu">Bengkulu, Bengkulu</option>
+                                <option value="Bogor">Bogor, Jawa Barat</option>
+                                <option value="Bontang">Bontang, Kalimantan Timur</option>
+                                <option value="Bukittinggi">Bukittinggi, Sumatera Barat</option>
+                                <option value="Cilegon">Cilegon, Banten</option>
+                                <option value="Cimahi">Cimahi, Jawa Barat</option>
+                                <option value="Cirebon">Cirebon, Jawa Barat</option>
+                                <option value="Denpasar">Denpasar, Bali</option>
+                                <option value="Depok">Depok, Jawa Barat</option>
+                                <option value="Dumai">Dumai, Riau</option>
+                                <option value="Gorontalo">Gorontalo, Gorontalo</option>
+                                <option value="Jakarta Barat">Jakarta Barat, DKI Jakarta</option>
+                                <option value="Jakarta Pusat">Jakarta Pusat, DKI Jakarta</option>
+                                <option value="Jakarta Selatan">Jakarta Selatan, DKI Jakarta</option>
+                                <option value="Jakarta Timur">Jakarta Timur, DKI Jakarta</option>
+                                <option value="Jakarta Utara">Jakarta Utara, DKI Jakarta</option>
+                                <option value="Jambi">Jambi, Jambi</option>
+                                <option value="Jayapura">Jayapura, Papua</option>
+                                <option value="Kediri">Kediri, Jawa Timur</option>
+                                <option value="Kendari">Kendari, Sulawesi Tenggara</option>
+                                <option value="Kupang">Kupang, Nusa Tenggara Timur</option>
+                                <option value="Madiun">Madiun, Jawa Timur</option>
+                                <option value="Magelang">Magelang, Jawa Tengah</option>
+                                <option value="Makassar">Makassar, Sulawesi Selatan</option>
+                                <option value="Malang">Malang, Jawa Timur</option>
+                                <option value="Manado">Manado, Sulawesi Utara</option>
+                                <option value="Mataram">Mataram, Nusa Tenggara Barat</option>
+                                <option value="Medan">Medan, Sumatera Utara</option>
+                                <option value="Mojokerto">Mojokerto, Jawa Timur</option>
+                                <option value="Padang">Padang, Sumatera Barat</option>
+                                <option value="Palangkaraya">Palangkaraya, Kalimantan Tengah</option>
+                                <option value="Palembang">Palembang, Sumatera Selatan</option>
+                                <option value="Palu">Palu, Sulawesi Tengah</option>
+                                <option value="Pangkalpinang">Pangkalpinang, Kep. Bangka Belitung</option>
+                                <option value="Pekanbaru">Pekanbaru, Riau</option>
+                                <option value="Pontianak">Pontianak, Kalimantan Barat</option>
+                                <option value="Probolinggo">Probolinggo, Jawa Timur</option>
+                                <option value="Remote">Remote / Seluruh Indonesia</option>
+                                <option value="Samarinda">Samarinda, Kalimantan Timur</option>
+                                <option value="Semarang">Semarang, Jawa Tengah</option>
+                                <option value="Serang">Serang, Banten</option>
+                                <option value="Sidoarjo">Sidoarjo, Jawa Timur</option>
+                                <option value="Singkawang">Singkawang, Kalimantan Barat</option>
+                                <option value="Solo">Solo / Surakarta, Jawa Tengah</option>
+                                <option value="Sorong">Sorong, Papua Barat Daya</option>
+                                <option value="Sukabumi">Sukabumi, Jawa Barat</option>
+                                <option value="Surabaya">Surabaya, Jawa Timur</option>
+                                <option value="Tangerang">Tangerang, Banten</option>
+                                <option value="Tangerang Selatan">Tangerang Selatan, Banten</option>
+                                <option value="Tanjungpinang">Tanjungpinang, Kepulauan Riau</option>
+                                <option value="Tarakan">Tarakan, Kalimantan Utara</option>
+                                <option value="Tasikmalaya">Tasikmalaya, Jawa Barat</option>
+                                <option value="Tegal">Tegal, Jawa Tengah</option>
+                                <option value="Ternate">Ternate, Maluku Utara</option>
+                                <option value="Yogyakarta">Yogyakarta, DI Yogyakarta</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-muted text-xs pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <!-- Filter 3: Kategori -->
+                    <div class="md:col-span-2">
+                        <label for="categoryFilter" class="block text-xs font-bold uppercase tracking-wider text-navy mb-1.5 ml-1">
+                            Kategori
+                        </label>
+                        <select id="categoryFilter" onchange="renderJobs()" class="w-full px-3.5 py-3 rounded-xl bg-offwhite border border-slate-200 text-xs sm:text-sm font-medium focus:outline-none focus:border-navy cursor-pointer">
+                            <option value="">Semua Kategori</option>
+                            <option value="Teknologi">Teknologi & Data</option>
+                            <option value="Perbankan">Perbankan & Finance</option>
+                            <option value="HR & Bisnis">HR & Bisnis</option>
+                            <option value="Marketing">Marketing & Desain</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter 4: Tipe Kerja -->
+                    <div class="md:col-span-1">
+                        <label for="unifiedJobType" class="block text-xs font-bold uppercase tracking-wider text-navy mb-1.5 ml-1">
+                            Tipe
+                        </label>
+                        <select id="unifiedJobType" onchange="renderJobs()" class="w-full px-2.5 py-3 rounded-xl bg-offwhite border border-slate-200 text-xs sm:text-sm font-medium focus:outline-none focus:border-navy cursor-pointer">
+                            <option value="">Semua</option>
+                            <option value="Full-time">Full-time</option>
+                            <option value="Hybrid">Hybrid</option>
+                            <option value="Remote">Remote</option>
+                            <option value="Magang">Magang</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter 5: Pengalaman -->
+                    <div class="md:col-span-2">
+                        <label for="expFilter" class="block text-xs font-bold uppercase tracking-wider text-navy mb-1.5 ml-1">
+                            Pengalaman
+                        </label>
+                        <select id="expFilter" onchange="renderJobs()" class="w-full px-3.5 py-3 rounded-xl bg-offwhite border border-slate-200 text-xs sm:text-sm font-medium focus:outline-none focus:border-navy cursor-pointer">
+                            <option value="">Semua Level</option>
+                            <option value="Fresh Graduate">Fresh Graduate</option>
+                            <option value="1-3 Tahun">1–3 Tahun</option>
+                            <option value="3+ Tahun">3+ Tahun</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <span id="jobResultCount" class="font-extrabold text-navy">Menampilkan 12 Lowongan</span>
+                    <button onclick="resetAllJobFilters()" class="text-sky-700 font-bold hover:underline">Reset Filter</button>
+                </div>
+            </div>
+
+            <!-- Dynamic Job Cards Grid -->
+            <div id="jobsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Populated via JavaScript with official company SVG logos -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 5. AI CAREER TOOLS (AI JOB MATCHING & AI CAREER ASSISTANT) ==================== -->
+    <section id="ai-tools" class="py-20 bg-white border-t border-slate-200/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-14">
+                <span class="text-xs font-bold uppercase tracking-wider text-sky-700 bg-lightblue px-3.5 py-1.5 rounded-full">Langkah 3 • Kecerdasan Karier</span>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-navy mt-3 tracking-tight">AI Job Matching & AI Career Assistant</h2>
+                <p class="text-muted mt-2">Hubungkan kompetensi Anda dengan kebutuhan spesifik perusahaan dan konsultasikan strategi wawancara maupun gaji bersama asisten AI.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Left: AI Job Matching Interactive Visual Node Network -->
+                <div class="lg:col-span-6 bg-offwhite rounded-3xl p-7 sm:p-8 border border-slate-200/90 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-3 py-1 rounded-full bg-sky-100 text-navy text-xs font-bold">AI Job Matching Engine</span>
+                            <span class="text-xs font-extrabold text-emerald-600">Akurasi Vektor 95.2%</span>
+                        </div>
+                        <h3 class="text-xl font-extrabold text-navy mb-2">Pemetaan Kandidat & Perusahaan Target</h3>
+                        <p class="text-xs text-muted leading-relaxed mb-5">Pilih target industri di bawah untuk melihat simulasi kecocokan keterampilan dan budaya kerja secara real-time:</p>
+
+                        <!-- Interactive Target Selector -->
+                        <div class="flex flex-wrap gap-2 mb-5">
+                            <button onclick="updateJobMatchTarget('bri')" class="match-target-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-navy text-white transition-all">Bank BRI (Perbankan)</button>
+                            <button onclick="updateJobMatchTarget('goto')" class="match-target-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-charcoal hover:bg-lightblue transition-all">GoTo (Tech & Data)</button>
+                            <button onclick="updateJobMatchTarget('traveloka')" class="match-target-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-charcoal hover:bg-lightblue transition-all">Traveloka (Product)</button>
+                        </div>
+
+                        <!-- Functional Candidate <-> Company Match Diagram -->
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-5">
+                            <div class="flex items-center justify-between gap-2">
+                                <!-- Candidate Node -->
+                                <div class="flex-1 bg-lightblue/60 p-3.5 rounded-2xl border border-sky-200 text-center">
+                                    <div class="w-10 h-10 rounded-xl bg-navy text-white mx-auto flex items-center justify-center font-bold text-sm mb-2">
+                                        <i class="fa-solid fa-user-graduate"></i>
+                                    </div>
+                                    <p class="text-xs font-extrabold text-navy">Profil Kandidat</p>
+                                    <p class="text-[10px] text-muted mt-0.5">CV Score 94 • Analitis</p>
+                                </div>
+
+                                <!-- Connecting AI Match Percentage Badge -->
+                                <div class="flex flex-col items-center px-2">
+                                    <div id="matchNodeScore" class="px-3 py-1.5 rounded-full bg-emerald-500 text-white font-extrabold text-xs shadow-md">
+                                        96% Match
+                                    </div>
+                                    <div class="w-16 h-0.5 bg-gradient-to-r from-navy via-emerald-500 to-sky-600 my-1.5"></div>
+                                    <span class="text-[9px] font-bold text-muted uppercase">AI Vector</span>
+                                </div>
+
+                                <!-- Company Node -->
+                                <div class="flex-1 bg-offwhite p-3.5 rounded-2xl border border-slate-200 text-center">
+                                    <div class="w-10 h-10 rounded-xl bg-sky-600 text-white mx-auto flex items-center justify-center font-bold text-sm mb-2">
+                                        <i class="fa-solid fa-building"></i>
+                                    </div>
+                                    <p id="matchTargetCompany" class="text-xs font-extrabold text-navy">PT Bank BRI Tbk</p>
+                                    <p id="matchTargetRole" class="text-[10px] text-muted mt-0.5">Talent & Data Specialist</p>
+                                </div>
+                            </div>
+
+                            <!-- Breakdown Bars -->
+                            <div class="space-y-2.5 pt-2 border-t border-slate-100 text-xs">
+                                <div>
+                                    <div class="flex justify-between font-bold mb-1">
+                                        <span class="text-charcoal">Kesesuaian Hard Skills</span>
+                                        <span id="matchSkillPct" class="text-navy">97%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                        <div id="matchSkillBar" class="bg-navy h-full w-[97%] rounded-full transition-all duration-500"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between font-bold mb-1">
+                                        <span class="text-charcoal">Kesesuaian Budaya & Preferensi Kerja</span>
+                                        <span id="matchCulturePct" class="text-emerald-600">94%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                        <div id="matchCultureBar" class="bg-emerald-500 h-full w-[94%] rounded-full transition-all duration-500"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="#find-jobs" class="mt-6 w-full py-3.5 rounded-xl bg-navy text-white font-bold text-xs text-center hover:bg-navy-dark shadow-md transition-all">
+                        Lihat Lowongan dengan AI Match Tertinggi
+                    </a>
+                </div>
+
+                <!-- Right: Embedded Interactive AI Career Assistant Chatbot -->
+                <div class="lg:col-span-6 bg-offwhite rounded-3xl p-7 sm:p-8 border border-slate-200/90 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-11 h-11 rounded-2xl bg-navy text-white flex items-center justify-center text-lg shadow-sm">
+                                    <i class="fa-solid fa-robot"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-extrabold text-navy">AI Career Assistant</h3>
+                                    <p class="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Online • Konsultan Karier & Interview
+                                    </p>
+                                </div>
+                            </div>
+                            <span class="text-[11px] font-bold text-muted bg-white px-2.5 py-1 rounded-lg border border-slate-200">24/7 AI Coach</span>
+                        </div>
+
+                        <!-- Live Conversation Box -->
+                        <div id="inlineChatBox" class="bg-white rounded-2xl p-4 border border-slate-200 h-56 overflow-y-auto space-y-3 text-xs mb-3">
+                            <div class="flex items-start gap-2.5">
+                                <div class="w-7 h-7 rounded-lg bg-navy text-white font-bold flex items-center justify-center text-[10px] flex-shrink-0">AI</div>
+                                <div class="bg-lightblue/60 text-charcoal p-3 rounded-2xl rounded-tl-none max-w-[85%] leading-relaxed">
+                                    Halo! Saya AI Career Assistant SmartJob. Tanyakan seputar strategi wawancara HR, estimasi gaji di kota Anda, atau rekomendasi peningkatan CV.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Prompt Chips -->
+                        <div class="flex flex-wrap gap-1.5 mb-3">
+                            <button onclick="sendQuickPrompt('Bagaimana cara menjawab kelemahan saat interview HR?')" class="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-navy text-[11px] font-semibold text-navy transition-all">Tips Jawab Kelemahan Interview</button>
+                            <button onclick="sendQuickPrompt('Berapa standar gaji Data Analyst di Jakarta?')" class="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-navy text-[11px] font-semibold text-navy transition-all">Standar Gaji Data Analyst</button>
+                            <button onclick="sendQuickPrompt('Bagaimana cara negosiasi offering letter?')" class="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-navy text-[11px] font-semibold text-navy transition-all">Negosiasi Offering Letter</button>
+                        </div>
+                    </div>
+
+                    <form onsubmit="handleInlineChat(event)" class="flex gap-2">
+                        <input type="text" id="inlineChatInput" required placeholder="Ketik pertanyaan karier Anda di sini..." class="flex-1 px-4 py-3 rounded-xl bg-white border border-slate-200 text-xs focus:outline-none focus:border-navy">
+                        <button type="submit" class="px-5 py-3 rounded-xl bg-navy text-white font-bold text-xs hover:bg-navy-dark transition-all" aria-label="Kirim Pesan">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 6. CAREER DEVELOPMENT, PORTOFOLIO & PELATIHAN SERTIFIKASI ==================== -->
+    <section id="career-development" class="py-20 bg-offwhite border-t border-slate-200/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-700 bg-lightblue px-3.5 py-1.5 rounded-full">Langkah 4 • Pengembangan Kompetensi</span>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-navy mt-3 tracking-tight">Career Development, Portofolio & Pelatihan Sertifikasi</h2>
+                    <p class="text-muted mt-2 max-w-2xl">Pelajari materi & modul pendukung terstruktur, ikuti Skill Assessment, dan tampilkan studi kasus portofolio Anda untuk berbagai posisi & perusahaan.</p>
+                </div>
+                <button onclick="openAddPortfolioModal()" class="mt-4 md:mt-0 px-5 py-3 rounded-xl bg-navy text-white font-bold text-xs hover:bg-navy-dark shadow-md transiti
+...
